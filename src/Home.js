@@ -1,63 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { auth } from './firebase'; // 파이어베이스 인증 도구
-import { onAuthStateChanged } from 'firebase/auth'; // 로그인 상태 감지 도구
-import { logOut } from './authService'; // 로그아웃 함수
+import Navbar from './Navbar'; // ★ 부품 가져오기
 
 export default function Home() {
-  const [user, setUser] = useState(null); // 로그인한 유저 정보 (없으면 null)
-
-  // 화면이 켜지면 로그인 상태인지 확인하는 함수 (useEffect)
-  useEffect(() => {
-    // 파이어베이스야, 로그인 상태 바뀌면 알려줘!
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser); // 로그인했으면 정보 담고, 안 했으면 null
-    });
-    return () => unsubscribe(); // 청소 (화면 꺼질 때 감시 중단)
-  }, []);
-
   return (
     <div>
-      {/* --- 헤더 --- */}
-      <header className="site-header">
-        <div className="container nav">
-          <div className="logo">
-            <img
-              src="assets/img/easy-tracer-icon.png"
-              alt="Easy Tracer 아이콘"
-              className="logo-icon"
-            />
-            Easy Tracer
-          </div>
-          <nav>
-            <Link to="/" className="active">홈</Link>
-            <Link to="/problems">문제 목록</Link>
-            <Link to="#">랭킹</Link>
-            <Link to="#">커뮤니티</Link>
-            
-            {/* ★ 여기가 핵심! (로그인 상태에 따라 버튼이 바뀜) ★ */}
-            {user ? (
-              // 로그인 상태면: 이름과 로그아웃 버튼 보여주기
-              <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginLeft: '20px' }}>
-                <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#3b82f6' }}>
-                  {user.email.split('@')[0]}님
-                </span>
-                <button 
-                  onClick={logOut} 
-                  className="btn-primary nav-mypage" 
-                  style={{ cursor: 'pointer', background: 'transparent', color: '#3b82f6', border: '1px solid #3b82f6' }}
-                >
-                  로그아웃
-                </button>
-              </div>
-            ) : (
-              // 로그인 안 했으면: 로그인 버튼 보여주기
-              <Link to="/auth" className="btn-primary nav-mypage">로그인</Link>
-            )}
-
-          </nav>
-        </div>
-      </header>
+      {/* 복잡한 헤더 코드 싹 지우고 이거 하나면 끝! */}
+      <Navbar />
 
       {/* --- 메인 배너 --- */}
       <main className="container">
