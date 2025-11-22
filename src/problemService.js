@@ -24,7 +24,6 @@ export const submitAnswer = async (userId, problemId, userAnswer) => {
         const isCorrect = (problem.answer === userAnswer);
 
         // (2) 제출 기록을 DB 'submissions' 장부에 영구 저장
-        // (백엔드 2가 배열로 했던 걸 DB로 바꿈 -> 새로고침 해도 안 날아감)
         await addDoc(collection(db, "submissions"), {
             userId: userId,
             problemId: problemId,
