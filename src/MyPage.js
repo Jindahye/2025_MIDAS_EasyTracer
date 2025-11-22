@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { auth } from './firebase';
-import { getUserData } from './authService'; // logOut 지웠습니다!
+import { getUserData, sendPasswordReset } from './authService'; // ★ sendPasswordReset 추가됨
 import { useNavigate, Link } from 'react-router-dom';
 import Navbar from './Navbar';
 import './MyPage.css';
@@ -35,11 +35,19 @@ export default function MyPage() {
     return () => unsubscribe();
   }, [navigate]);
 
+  // ★ 비밀번호 변경 버튼 기능 (추가됨)
+  const handlePasswordReset = () => {
+    if (window.confirm(`${userInfo.email}로\n비밀번호 재설정 메일을 보내시겠습니까?`)) {
+      sendPasswordReset(userInfo.email);
+    }
+  };
+
   if (loading) {
     return (
       <div>
         <Navbar />
-        <div className="mypage-loading">
+        {/* ★ 로딩 화면 가운데 정렬 수정 (flex 사용) ★ */}
+        <div className="mypage-loading" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '100px' }}>
           <div className="spinner"></div>
           <p>데이터를 불러오는 중...</p>
         </div>
@@ -109,7 +117,9 @@ export default function MyPage() {
                 문제 풀러 가기 👉
               </button>
             </Link>
-            <button className="action-btn secondary" onClick={() => alert('준비 중인 기능입니다.')}>
+            
+            {/* ★ 비밀번호 변경 버튼 연결됨 ★ */}
+            <button className="action-btn secondary" onClick={handlePasswordReset}>
               비밀번호 변경
             </button>
           </div>
