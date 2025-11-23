@@ -1,0 +1,118 @@
+/* 문제 풀이 화면 전용 스타일 */
+
+/* 카드 확장 (기본 auth-card보다 넓게) */
+.solve-card {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+/* 문제 헤더 */
+.problem-header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px dashed #e5e7eb;
+}
+
+.problem-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #1f2937;
+  margin: 10px 0;
+}
+
+/* 문제 설명 박스 */
+.problem-desc {
+  background-color: #f9fafb;
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  font-size: 17px;
+  line-height: 1.6;
+  color: #374151;
+  margin-bottom: 32px;
+}
+
+/* 보기(옵션) 리스트 */
+.options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.option-label {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: white;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.option-label:hover {
+  border-color: rgba(59, 130, 246, 0.5);
+  background-color: #f0f9ff;
+}
+
+/* 선택된 보기 강조 */
+.option-label.selected {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+  color: #1e40af;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.option-radio {
+  margin-right: 12px;
+  accent-color: #3b82f6;
+  width: 18px;
+  height: 18px;
+}
+
+/* 하단 버튼 그룹 */
+.solve-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.btn-back {
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.btn-submit {
+  background-color: #3b82f6;
+  color: white;
+  padding: 14px 40px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.btn-submit:hover {
+  background-color: #2563eb;
+  transform: translateY(-2px);
+}
+
+.btn-submit:active {
+  transform: translateY(0);
+}
