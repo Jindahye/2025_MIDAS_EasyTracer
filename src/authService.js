@@ -3,13 +3,13 @@ import {
     createUserWithEmailAndPassword, 
     signInWithEmailAndPassword, 
     signOut,
-    sendPasswordResetEmail // 비밀번호 변경 기능
+    sendPasswordResetEmail 
 } from "firebase/auth";
 import { 
     doc, 
     setDoc, 
     getDoc, 
-    updateDoc, 
+    // updateDoc 삭제함 (이제 안 씀)
     arrayUnion, 
     increment 
 } from "firebase/firestore";
@@ -20,7 +20,6 @@ import {
 
 /**
  * 회원가입 함수
- * - 이메일/비번으로 계정 생성 + DB에 유저 정보 자동 생성
  */
 export const signUp = async (email, password) => {
     try {
@@ -41,7 +40,6 @@ export const signUp = async (email, password) => {
     } catch (error) {
         let msg = "가입 실패";
         
-        // 에러 코드별 친절한 메시지 처리
         switch (error.code) {
             case "auth/email-already-in-use":
                 msg = "이미 가입된 이메일입니다.";
@@ -72,7 +70,6 @@ export const logIn = async (email, password) => {
     } catch (error) {
         let msg = "로그인 실패";
 
-        // 로그인 에러 처리
         switch (error.code) {
             case "auth/user-not-found":
             case "auth/wrong-password":
@@ -103,7 +100,7 @@ export const logOut = async () => {
 };
 
 /**
- * 비밀번호 재설정 메일 보내기 (NEW)
+ * 비밀번호 재설정 메일 보내기
  */
 export const sendPasswordReset = async (email) => {
     try {
@@ -149,16 +146,19 @@ export const getUserData = async (uid) => {
 };
 
 /**
- * 점수 올려주기 (채점용)
+ * 점수 올려주기 (채점용 - 에러 방지 강화됨)
  */
 export const updateUserScore = async (uid, problemId) => {
     try {
         const userRef = doc(db, "users", uid);
         
-        await updateDoc(userRef, {
+        // updateDoc 대신 setDoc({ merge: true }) 사용
+        // -> "장부가 있으면 업데이트하고, 없으면 새로 만들어라!" (안전함)
+        await setDoc(userRef, {
             solvedProblems: arrayUnion(problemId), // 중복 없이 문제 ID 추가
             score: increment(10)                   // 기존 점수 + 10점
-        });
+        }, { merge: true });
+
         console.log("점수 업데이트 완료!");
     } catch (error) {
         console.error("점수 업데이트 실패:", error);
