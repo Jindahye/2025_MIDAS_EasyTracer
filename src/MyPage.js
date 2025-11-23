@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { auth } from './firebase';
-import { getUserData, sendPasswordReset } from './authService';
+import { getUserData, sendPasswordReset, deleteAccount } from './authService'; // ★ deleteAccount 추가
 import { useNavigate, Link } from 'react-router-dom';
 import Navbar from './Navbar';
 import './MyPage.css';
@@ -19,15 +19,13 @@ export default function MyPage() {
       }
       
       const data = await getUserData(user.uid);
-      
       const emailPart = user.email ? user.email.split('@')[0] : '미등록 사용자';
 
       if (data) {
         setUserInfo(data);
       } else {
-        // DB 데이터가 없을 경우에도 기본 정보는 보여주도록 처리
         setUserInfo({
-          name: emailPart, // DB에 이름이 없으면 이메일 앞부분 사용
+          name: emailPart,
           email: user.email,
           score: 0,
           solvedProblems: []
@@ -38,9 +36,22 @@ export default function MyPage() {
     return () => unsubscribe();
   }, [navigate]);
 
+  // 비밀번호 변경 핸들러
   const handlePasswordReset = () => {
     if (window.confirm(`${userInfo.email}로\n비밀번호 재설정 메일을 보내시겠습니까?`)) {
       sendPasswordReset(userInfo.email);
+    }
+  };
+
+  // ★ 회원 탈퇴 핸들러 (추가됨)
+  const handleDeleteAccount = async () => {
+    if (window.confirm("정말로 탈퇴하시겠습니까?\n탈퇴 시 모든 점수와 기록이 영구적으로 삭제됩니다.")) {
+      try {
+        await deleteAccount(); // 탈퇴 함수 실행
+        navigate('/'); // 홈으로 튕겨냄
+      } catch (error) {
+        // 에러는 authService에서 alert로 처리됨
+      }
     }
   };
 
@@ -111,17 +122,28 @@ export default function MyPage() {
             </Link>
           </div>
 
-          {/* 3. 하단 액션 버튼 */}
-          <div className="mypage-actions">
-            <Link to="/problems">
-              <button className="action-btn primary">
+          {/* 3. 하단 버튼들 */}
+          <div className="mypage-actions" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <Link to="/problems" style={{ width: '100%' }}>
+              <button className="action-btn primary" style={{ width: '100%' }}>
                 문제 풀러 가기 👉
               </button>
             </Link>
             
-            <button className="action-btn secondary" onClick={handlePasswordReset}>
-              비밀번호 변경
-            </button>
+            <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
+                <button className="action-btn secondary" onClick={handlePasswordReset} style={{ flex: 1 }}>
+                  비밀번호 변경
+                </button>
+                
+                {/* ★ 탈퇴 버튼 추가됨 ★ */}
+                <button 
+                    className="action-btn" 
+                    onClick={handleDeleteAccount} 
+                    style={{ flex: 1, backgroundColor: '#fff', border: '1px solid #fca5a5', color: '#dc2626' }}
+                >
+                  회원 탈퇴
+                </button>
+            </div>
           </div>
         </div>
       </main>
