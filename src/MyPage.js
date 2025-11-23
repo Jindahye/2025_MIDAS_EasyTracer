@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { auth } from './firebase';
-import { getUserData, sendPasswordReset } from './authService'; // ★ sendPasswordReset 추가됨
+import { getUserData, sendPasswordReset } from './authService';
 import { useNavigate, Link } from 'react-router-dom';
 import Navbar from './Navbar';
 import './MyPage.css';
@@ -20,11 +20,14 @@ export default function MyPage() {
       
       const data = await getUserData(user.uid);
       
+      const emailPart = user.email ? user.email.split('@')[0] : '미등록 사용자';
+
       if (data) {
         setUserInfo(data);
       } else {
+        // DB 데이터가 없을 경우에도 기본 정보는 보여주도록 처리
         setUserInfo({
-          name: user.email.split('@')[0],
+          name: emailPart, // DB에 이름이 없으면 이메일 앞부분 사용
           email: user.email,
           score: 0,
           solvedProblems: []
@@ -35,7 +38,6 @@ export default function MyPage() {
     return () => unsubscribe();
   }, [navigate]);
 
-  // ★ 비밀번호 변경 버튼 기능 (추가됨)
   const handlePasswordReset = () => {
     if (window.confirm(`${userInfo.email}로\n비밀번호 재설정 메일을 보내시겠습니까?`)) {
       sendPasswordReset(userInfo.email);
@@ -46,7 +48,6 @@ export default function MyPage() {
     return (
       <div>
         <Navbar />
-        {/* ★ 로딩 화면 가운데 정렬 수정 (flex 사용) ★ */}
         <div className="mypage-loading" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '100px' }}>
           <div className="spinner"></div>
           <p>데이터를 불러오는 중...</p>
@@ -100,14 +101,14 @@ export default function MyPage() {
               </div>
             </div>
 
-            <div className="mypage-card stat-card purple">
+            <Link to="/ranking" className="mypage-card stat-card purple" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
               <div className="stat-icon">🥇</div>
               <div className="stat-text">
-                <h3>내 랭킹</h3>
+                <h3>내 랭킹 &rarr;</h3>
                 <p className="stat-value">- 위</p>
-                <span className="stat-sub">(준비 중)</span>
+                <span className="stat-sub">전체 보기</span>
               </div>
-            </div>
+            </Link>
           </div>
 
           {/* 3. 하단 액션 버튼 */}
@@ -118,7 +119,6 @@ export default function MyPage() {
               </button>
             </Link>
             
-            {/* ★ 비밀번호 변경 버튼 연결됨 ★ */}
             <button className="action-btn secondary" onClick={handlePasswordReset}>
               비밀번호 변경
             </button>

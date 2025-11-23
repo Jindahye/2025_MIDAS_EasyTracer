@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { db } from './firebase';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import Navbar from './Navbar';
-import './Ranking.css'; // ★ 랭킹 전용 디자인 연결
+import './Ranking.css';
 
 export default function Ranking() {
   const [rankings, setRankings] = useState([]);
@@ -11,7 +11,6 @@ export default function Ranking() {
   useEffect(() => {
     const fetchRankings = async () => {
       try {
-        // 1. Firestore에서 유저 데이터 가져오기 (점수 높은 순, 최대 20명)
         const usersRef = collection(db, "users");
         const q = query(usersRef, orderBy("score", "desc"), limit(20));
         
@@ -32,12 +31,17 @@ export default function Ranking() {
     fetchRankings();
   }, []);
 
-  // 순위에 따른 메달 아이콘 반환 함수
   const getRankIcon = (rank) => {
     if (rank === 1) return '🥇';
     if (rank === 2) return '🥈';
     if (rank === 3) return '🥉';
     return <span className="rank-number">{rank}</span>;
+  };
+
+  const getDisplayName = (user) => {
+    // ★ 에러 방지: user.email이 있을 때만 쪼개고, 없으면 '미등록'
+    const emailPart = user.email ? user.email.split('@')[0] : '미등록 사용자';
+    return user.name || emailPart;
   };
 
   return (
@@ -60,14 +64,12 @@ export default function Ranking() {
           </div>
         ) : (
           <div className="ranking-card">
-            {/* 헤더 (표의 제목) */}
             <div className="rank-list-header">
               <div className="col-rank">순위</div>
               <div className="col-name">이름</div>
               <div className="col-score">점수</div>
             </div>
 
-            {/* 랭킹 리스트 */}
             <div className="rank-list-body">
               {rankings.length > 0 ? (
                 rankings.map((user, index) => (
@@ -76,7 +78,8 @@ export default function Ranking() {
                       <div className="rank-icon">{getRankIcon(index + 1)}</div>
                     </div>
                     <div className="col-name">
-                      <span className="user-name">{user.name || user.email.split('@')[0]}</span>
+                      {/* ★ getDisplayName 함수 사용 ★ */}
+                      <span className="user-name">{getDisplayName(user)}</span>
                       {index === 0 && <span className="badge-top">TOP</span>}
                     </div>
                     <div className="col-score">
@@ -86,8 +89,7 @@ export default function Ranking() {
                 ))
               ) : (
                 <div className="empty-rank">
-                  아직 등록된 랭킹 데이터가 없습니다. 😢<br />
-                  가장 먼저 문제를 풀고 1등이 되어보세요!
+                  아직 등록된 랭킹 데이터가 없습니다. 😢
                 </div>
               )}
             </div>
