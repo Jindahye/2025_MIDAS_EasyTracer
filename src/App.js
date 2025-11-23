@@ -1,25 +1,28 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
+// 페이지들 가져오기
 import Home from './Home';
 import Login from './Login';
 import MyPage from './MyPage';
-import Ranking from './Ranking'; // ★ 랭킹 화면 가져오기
+import Ranking from './Ranking';
+import ProblemList from './ProblemList';   
+import ProblemSolve from './ProblemSolve'; 
+import Community from './Community';       
 
 function App() {
   return (
     <Router>
       <Routes>
-        {/* 메인 화면 */}
         <Route path="/" element={<Home />} />
-        
-        {/* 로그인 화면 */}
         <Route path="/auth" element={<Login />} />
-        
-        {/* 마이페이지 */}
         <Route path="/mypage" element={<MyPage />} />
         
-        {/* ★ 랭킹 화면 추가 */}
         <Route path="/ranking" element={<Ranking />} />
+        <Route path="/community" element={<Community />} />
+
+        <Route path="/problems" element={<ProblemList />} />
+        <Route path="/problems/:id" element={<ProblemSolve />} />
       </Routes>
     </Router>
   );
