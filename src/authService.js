@@ -4,13 +4,14 @@ import {
     signInWithEmailAndPassword, 
     signOut,
     sendPasswordResetEmail,
-    deleteUser // ★ 계정 삭제 도구 추가
+    deleteUser 
 } from "firebase/auth";
 import { 
     doc, 
     setDoc, 
     getDoc, 
-    deleteDoc, // ★ 문서 삭제 도구 추가
+    deleteDoc, 
+    updateDoc, // ★ 이거 꼭 있어야 함!
     arrayUnion, 
     increment 
 } from "firebase/firestore";
@@ -27,7 +28,7 @@ export const signUp = async (email, password) => {
 
         await setDoc(doc(db, "users", user.uid), {
             email: email,
-            name: email.split("@")[0],
+            name: email.split("@")[0], // 초기 닉네임은 이메일 앞부분
             solvedProblems: [],
             score: 0
         });
@@ -118,29 +119,37 @@ export const updateUserScore = async (uid, problemId) => {
     }
 };
 
-// ==========================================
-// ★ 3. [추가됨] 회원 탈퇴 함수
-// ==========================================
+// 회원 탈퇴
 export const deleteAccount = async () => {
     const user = auth.currentUser;
     if (!user) return;
 
     try {
-        // 1. DB에서 내 정보 삭제 (장부 찢기)
         await deleteDoc(doc(db, "users", user.uid));
-        
-        // 2. 인증 계정 삭제 (회원 명부에서 지우기)
         await deleteUser(user);
-        
         alert("회원 탈퇴가 완료되었습니다. 이용해 주셔서 감사합니다.");
     } catch (error) {
         console.error("탈퇴 에러:", error);
-        // 보안상 로그인한 지 오래되면 재로그인하라고 함
         if (error.code === 'auth/requires-recent-login') {
             alert("보안을 위해 로그아웃 후 다시 로그인한 뒤 탈퇴를 시도해주세요.");
         } else {
             alert("탈퇴 실패: " + error.message);
         }
+        throw error;
+    }
+};
+
+// ★ 3. [추가됨] 닉네임 변경 함수
+export const updateNickname = async (uid, newName) => {
+    try {
+        const userRef = doc(db, "users", uid);
+        await updateDoc(userRef, {
+            name: newName
+        });
+        alert("닉네임이 변경되었습니다!");
+    } catch (error) {
+        console.error("닉네임 변경 실패:", error);
+        alert("닉네임 변경 실패: " + error.message);
         throw error;
     }
 };

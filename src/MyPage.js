@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { auth } from './firebase';
-import { getUserData, sendPasswordReset, deleteAccount } from './authService'; // ★ deleteAccount 추가
+// ★ updateNickname 추가됨
+import { getUserData, sendPasswordReset, deleteAccount, updateNickname } from './authService'; 
 import { useNavigate, Link } from 'react-router-dom';
 import Navbar from './Navbar';
 import './MyPage.css';
@@ -8,6 +9,11 @@ import './MyPage.css';
 export default function MyPage() {
   const [userInfo, setUserInfo] = useState(null);
   const [loading, setLoading] = useState(true); 
+  
+  // ★ 닉네임 수정 모드 상태 추가
+  const [isEditing, setIsEditing] = useState(false);
+  const [newName, setNewName] = useState('');
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,35 +29,51 @@ export default function MyPage() {
 
       if (data) {
         setUserInfo(data);
+        setNewName(data.name || emailPart); // 수정할 때 초기값 설정
       } else {
-        setUserInfo({
+        const tempInfo = {
           name: emailPart,
           email: user.email,
           score: 0,
           solvedProblems: []
-        });
+        };
+        setUserInfo(tempInfo);
+        setNewName(tempInfo.name);
       }
       setLoading(false); 
     });
     return () => unsubscribe();
   }, [navigate]);
 
-  // 비밀번호 변경 핸들러
+  // 비밀번호 변경
   const handlePasswordReset = () => {
     if (window.confirm(`${userInfo.email}로\n비밀번호 재설정 메일을 보내시겠습니까?`)) {
       sendPasswordReset(userInfo.email);
     }
   };
 
-  // ★ 회원 탈퇴 핸들러 (추가됨)
+  // 회원 탈퇴
   const handleDeleteAccount = async () => {
     if (window.confirm("정말로 탈퇴하시겠습니까?\n탈퇴 시 모든 점수와 기록이 영구적으로 삭제됩니다.")) {
       try {
-        await deleteAccount(); // 탈퇴 함수 실행
-        navigate('/'); // 홈으로 튕겨냄
-      } catch (error) {
-        // 에러는 authService에서 alert로 처리됨
-      }
+        await deleteAccount();
+        navigate('/'); 
+      } catch (error) {}
+    }
+  };
+
+  // ★ 닉네임 저장 버튼 핸들러
+  const handleSaveNickname = async () => {
+    if (!newName.trim()) {
+      alert("닉네임을 입력해주세요.");
+      return;
+    }
+    try {
+      await updateNickname(auth.currentUser.uid, newName);
+      setUserInfo({ ...userInfo, name: newName }); // 화면도 즉시 갱신
+      setIsEditing(false); // 수정 모드 끄기
+    } catch (error) {
+      // 에러 처리는 authService에서 함
     }
   };
 
@@ -82,8 +104,34 @@ export default function MyPage() {
             <div className="profile-avatar">
               {userInfo.name ? userInfo.name[0].toUpperCase() : 'U'}
             </div>
+            
             <div className="profile-info">
-              <h2 className="profile-name">{userInfo.name}</h2>
+              {/* ★ 닉네임 수정 UI 부분 ★ */}
+              {isEditing ? (
+                <div style={{ display: 'flex', gap: '5px', marginBottom: '5px' }}>
+                  <input 
+                    type="text" 
+                    value={newName} 
+                    onChange={(e) => setNewName(e.target.value)}
+                    className="auth-input"
+                    style={{ width: '150px', padding: '5px' }}
+                  />
+                  <button onClick={handleSaveNickname} style={{ cursor: 'pointer', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '5px', padding: '5px 10px' }}>저장</button>
+                  <button onClick={() => setIsEditing(false)} style={{ cursor: 'pointer', background: '#e5e7eb', border: 'none', borderRadius: '5px', padding: '5px 10px' }}>취소</button>
+                </div>
+              ) : (
+                <h2 className="profile-name" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {userInfo.name}
+                  <button 
+                    onClick={() => setIsEditing(true)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' }}
+                    title="닉네임 변경"
+                  >
+                    ✏️
+                  </button>
+                </h2>
+              )}
+
               <p className="profile-email">{userInfo.email}</p>
               <div className="profile-badges">
                 <span className="badge-user">학생</span>
@@ -135,7 +183,6 @@ export default function MyPage() {
                   비밀번호 변경
                 </button>
                 
-                {/* ★ 탈퇴 버튼 추가됨 ★ */}
                 <button 
                     className="action-btn" 
                     onClick={handleDeleteAccount} 
