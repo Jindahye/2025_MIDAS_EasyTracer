@@ -139,7 +139,7 @@ export const deleteAccount = async () => {
     }
 };
 
-// ★ 3. [추가됨] 닉네임 변경 함수
+// ★ 3. 닉네임 변경 함수
 export const updateNickname = async (uid, newName) => {
     try {
         const userRef = doc(db, "users", uid);
