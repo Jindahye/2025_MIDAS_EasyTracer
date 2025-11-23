@@ -11,9 +11,10 @@ import {
     setDoc, 
     getDoc, 
     deleteDoc, 
-    updateDoc, // ★ 이거 꼭 있어야 함!
     arrayUnion, 
-    increment 
+    increment,
+    updateDoc, // ★ 이 도구가 빠졌었습니다! 추가됨.
+    collection, query, where, getDocs
 } from "firebase/firestore";
 
 // ==========================================
@@ -28,7 +29,7 @@ export const signUp = async (email, password) => {
 
         await setDoc(doc(db, "users", user.uid), {
             email: email,
-            name: email.split("@")[0], // 초기 닉네임은 이메일 앞부분
+            name: email.split("@")[0],
             solvedProblems: [],
             score: 0
         });
@@ -139,10 +140,11 @@ export const deleteAccount = async () => {
     }
 };
 
-// ★ 3. 닉네임 변경 함수
+// ★ 3. [추가됨] 닉네임 변경 함수 (export 됨)
 export const updateNickname = async (uid, newName) => {
     try {
         const userRef = doc(db, "users", uid);
+        // updateDoc 사용
         await updateDoc(userRef, {
             name: newName
         });
@@ -151,5 +153,23 @@ export const updateNickname = async (uid, newName) => {
         console.error("닉네임 변경 실패:", error);
         alert("닉네임 변경 실패: " + error.message);
         throw error;
+    }
+};
+
+
+// 마이페이지 순위 계산 함수
+export const getGlobalRank = async (userScore) => {
+    try {
+        const usersRef = collection(db, "users");
+        
+        const q = query(usersRef, where("score", ">", userScore));
+        const snapshot = await getDocs(q);
+        
+        const rank = snapshot.size + 1;
+        
+        return rank;
+    } catch (error) {
+        console.error("랭킹 계산 실패:", error);
+        return 0; 
     }
 };

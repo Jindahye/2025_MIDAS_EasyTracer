@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { auth } from './firebase';
-// ★ updateNickname 추가됨
-import { getUserData, sendPasswordReset, deleteAccount, updateNickname } from './authService'; 
+import { getUserData, sendPasswordReset, deleteAccount, updateNickname, getGlobalRank } from './authService';
 import { useNavigate, Link } from 'react-router-dom';
 import Navbar from './Navbar';
 import './MyPage.css';
@@ -10,12 +9,13 @@ export default function MyPage() {
   const [userInfo, setUserInfo] = useState(null);
   const [loading, setLoading] = useState(true); 
   
-  // ★ 닉네임 수정 모드 상태 추가
   const [isEditing, setIsEditing] = useState(false);
   const [newName, setNewName] = useState('');
+  const [rank, setRank] = useState('-'); // 순위 상태
 
   const navigate = useNavigate();
 
+  // 1. 데이터 로딩 및 인증 체크
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (!user) {
@@ -27,42 +27,54 @@ export default function MyPage() {
       const data = await getUserData(user.uid);
       const emailPart = user.email ? user.email.split('@')[0] : '미등록 사용자';
 
+      let finalInfo;
+
       if (data) {
-        setUserInfo(data);
-        setNewName(data.name || emailPart); // 수정할 때 초기값 설정
+        finalInfo = data;
       } else {
-        const tempInfo = {
+        // DB 데이터가 없을 경우 (버그 방지용)
+        finalInfo = {
           name: emailPart,
           email: user.email,
           score: 0,
           solvedProblems: []
         };
-        setUserInfo(tempInfo);
-        setNewName(tempInfo.name);
       }
+      
+      setUserInfo(finalInfo);
+      setNewName(finalInfo.name); // 닉네임 수정창 초기값 설정
+      
+      // 2. 랭킹 계산
+      const calculatedRank = await getGlobalRank(finalInfo.score);
+      setRank(calculatedRank > 0 ? calculatedRank : '-'); // 0이면 미등록으로 표시
+
       setLoading(false); 
     });
     return () => unsubscribe();
   }, [navigate]);
 
-  // 비밀번호 변경
+  // 비밀번호 변경 핸들러
   const handlePasswordReset = () => {
+    // 경고: window.confirm은 커스텀 모달로 대체하는 것이 좋습니다.
     if (window.confirm(`${userInfo.email}로\n비밀번호 재설정 메일을 보내시겠습니까?`)) {
       sendPasswordReset(userInfo.email);
     }
   };
 
-  // 회원 탈퇴
+  // 회원 탈퇴 핸들러
   const handleDeleteAccount = async () => {
+    // 경고: window.confirm 대신 커스텀 모달 사용 권장
     if (window.confirm("정말로 탈퇴하시겠습니까?\n탈퇴 시 모든 점수와 기록이 영구적으로 삭제됩니다.")) {
       try {
         await deleteAccount();
         navigate('/'); 
-      } catch (error) {}
+      } catch (error) {
+        // 에러 처리는 authService에서 alert으로 함
+      }
     }
   };
-
-  // ★ 닉네임 저장 버튼 핸들러
+  
+  // 닉네임 저장 핸들러
   const handleSaveNickname = async () => {
     if (!newName.trim()) {
       alert("닉네임을 입력해주세요.");
@@ -70,13 +82,15 @@ export default function MyPage() {
     }
     try {
       await updateNickname(auth.currentUser.uid, newName);
-      setUserInfo({ ...userInfo, name: newName }); // 화면도 즉시 갱신
+      setUserInfo({ ...userInfo, name: newName }); // 화면 즉시 갱신
       setIsEditing(false); // 수정 모드 끄기
     } catch (error) {
-      // 에러 처리는 authService에서 함
+      // 에러 처리는 authService에서 alert으로 함
     }
   };
 
+
+  // 로딩 화면
   if (loading) {
     return (
       <div>
@@ -89,6 +103,7 @@ export default function MyPage() {
     );
   }
 
+  // 메인 화면
   return (
     <div>
       <Navbar />
@@ -106,9 +121,9 @@ export default function MyPage() {
             </div>
             
             <div className="profile-info">
-              {/* ★ 닉네임 수정 UI 부분 ★ */}
               {isEditing ? (
-                <div style={{ display: 'flex', gap: '5px', marginBottom: '5px' }}>
+                // 닉네임 수정 모드
+                <div style={{ display: 'flex', gap: '5px', alignItems: 'center', marginBottom: '5px' }}>
                   <input 
                     type="text" 
                     value={newName} 
@@ -120,6 +135,7 @@ export default function MyPage() {
                   <button onClick={() => setIsEditing(false)} style={{ cursor: 'pointer', background: '#e5e7eb', border: 'none', borderRadius: '5px', padding: '5px 10px' }}>취소</button>
                 </div>
               ) : (
+                // 일반 모드
                 <h2 className="profile-name" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   {userInfo.name}
                   <button 
@@ -164,7 +180,7 @@ export default function MyPage() {
               <div className="stat-icon">🥇</div>
               <div className="stat-text">
                 <h3>내 랭킹 &rarr;</h3>
-                <p className="stat-value">- 위</p>
+                <p className="stat-value">{rank} 위</p>
                 <span className="stat-sub">전체 보기</span>
               </div>
             </Link>
